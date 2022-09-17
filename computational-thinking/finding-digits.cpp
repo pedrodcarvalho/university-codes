@@ -28,7 +28,7 @@ int main()
 
         seed++;
 
-        std::cout << v  << " + " << u << " + " << a << " = " << result << std::endl;
+        std::cout << v << " + " << u << " + " << a << " = " << result << std::endl;
     }
 
     return 0;

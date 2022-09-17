@@ -1,7 +1,8 @@
 #include <iostream>
 #include <vector>
 
-int main() {
+int main()
+{
     std::vector<int> numbers;
     int size;
     int input;
@@ -50,7 +51,7 @@ int main() {
         }
     }
 
-    std::cout <<  "The smallest missing number is " << missingMin << std::endl;
+    std::cout << "The smallest missing number is " << missingMin << std::endl;
 
     return 0;
 }

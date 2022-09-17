@@ -37,7 +37,7 @@ int main()
 
     if (discriminant > 0) {
         std::cout << "There are 2 solutions.\n\n";
-        std::cout << "The solutions are: " << solutions.at(0)  << " and " << solutions.at(1) << std::endl;
+        std::cout << "The solutions are: " << solutions.at(0) << " and " << solutions.at(1) << std::endl;
     }
     else if (discriminant == 0) {
         std::cout << "There is 1 solution.\n\n";
