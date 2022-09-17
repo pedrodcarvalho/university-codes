@@ -12,6 +12,7 @@ void deduplicateVector(std::vector<int> &nums)
                 duplicatedNum++;
             }
         }
+
         if (duplicatedNum == 0) {
             numsDeduplicated.push_back(nums.at(i));
         }
@@ -23,7 +24,7 @@ void deduplicateVector(std::vector<int> &nums)
     nums = numsDeduplicated;
 }
 
-void printVector (std::vector<int> nums)
+void printVector(std::vector<int> nums)
 {
     std::cout << "The deduplicated vector is: [";
 
@@ -44,7 +45,7 @@ int main()
 
     std::cout << "Enter the vector elements: ";
 
-    while(std::cin.good()) {
+    while (std::cin.good()) {
         std::cin >> input;
 
         if (std::cin.good() || std::cin.eof()) {
