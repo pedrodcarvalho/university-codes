@@ -12,6 +12,7 @@ void deduplicateVector(std::vector<int> &nums)
                 duplicatedNum++;
             }
         }
+
         if (duplicatedNum == 0) {
             numsDeduplicated.push_back(nums.at(i));
         }
