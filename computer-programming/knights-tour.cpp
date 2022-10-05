@@ -110,8 +110,11 @@ bool findKnightsTour(std::vector<std::vector<bool>> board, std::vector<int> posi
     else if (!moved) {
         iMoves.push_back(iMoves.at(0));
         jMoves.push_back(jMoves.at(0));
-        iMoves.erase(iMoves.begin());
-        jMoves.erase(jMoves.begin());
+
+        for (int i = 0; i < iMoves.size() - 1; i++) {
+            iMoves.at(i) = iMoves.at(i + 1);
+            jMoves.at(i) = jMoves.at(i + 1);
+        }
 
         if (BOARD_SIZE > 9) {
             if (currentIndex.at(0) >= 0 && currentIndex.at(1) >= 0) {
@@ -120,7 +123,7 @@ bool findKnightsTour(std::vector<std::vector<bool>> board, std::vector<int> posi
 
             currentIndex = {positionIndexes.at(1) -= jMovement, positionIndexes.at(0) -= iMovement};
 
-            moveset.erase(4, moveset.size());
+            moveset.resize(4);
         }
         else {
             for (int i = 0; i < board.size(); i++) {
