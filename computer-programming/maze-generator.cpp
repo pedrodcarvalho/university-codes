@@ -2,20 +2,20 @@
 #include <sstream>
 #include <stack>
 #include <stdexcept>
-#include <chrono>
 #include <sys/time.h>
-#include <ctime>
 #include <vector>
 
 class Arguments {
   public:
     Arguments(int argc, char *argv[]);
-    int validateArguments(int argc);
+
+    void validateArguments(int argc);
+
     std::vector<int> getCoordinates();
 
   private:
-    int rows, columns, seed = -1;
     std::string CMDArguments;
+    int rows, columns, seed = -1;
 };
 
 Arguments::Arguments(int argc, char *argv[])
@@ -25,24 +25,7 @@ Arguments::Arguments(int argc, char *argv[])
     }
 }
 
-std::vector<int> Arguments::getCoordinates()
-{
-    std::vector<int> coordinates;
-
-    coordinates.push_back(rows);
-    coordinates.push_back(columns);
-
-    if (seed) {
-        coordinates.push_back(seed);
-    }
-    else {
-        coordinates.push_back(-1);
-    }
-
-    return coordinates;
-}
-
-int Arguments::validateArguments(int argc)
+void Arguments::validateArguments(int argc)
 {
     for (int i = 0; i < CMDArguments.size(); i++) {
         if (isalpha(CMDArguments.at(i))) {
@@ -51,7 +34,6 @@ int Arguments::validateArguments(int argc)
     }
 
     std::istringstream inputStringStream(CMDArguments);
-    rows, columns, seed;
 
     if (argc == 3) {
         inputStringStream >> rows >> columns;
@@ -60,31 +42,43 @@ int Arguments::validateArguments(int argc)
         inputStringStream >> rows >> columns >> seed;
     }
     else {
-        throw std::runtime_error("parameter list should have the format: \"int row int column int seed(optional)\"");
+        throw std::runtime_error("parameter list should have the format: \"Rows Columns Seed(optional)\"");
     }
+}
 
-    return 0;
+std::vector<int> Arguments::getCoordinates()
+{
+    std::vector<int> coordinates;
+
+    coordinates.push_back(rows);
+    coordinates.push_back(columns);
+    coordinates.push_back(seed);
+
+    return coordinates;
 }
 
 class Maze {
   public:
     Maze(Arguments argumentsObj);
+
     void initializeMaze();
-    void generateMaze(std::vector<int> currentCoordinate, std::vector<bool> possibleMoves, std::vector<int> moves);
+
+    void generateMaze(std::vector<int> currentCoordinate, std::vector<bool> possibleMoves, std::stack<std::vector<int>> moves);
+
     int randomPath(std::vector<bool> possibleMoves, int SEED);
-    std::vector<std::vector<char>> getMaze();
-    int getColumns();
+
+    int getColumns() { return COLUMNS; };
+
+    std::vector<std::vector<char>> getMaze() { return maze; };
 
   private:
     std::vector<int> coordinates;
-    int ROWS;
-    int COLUMNS;
-    int SEED;
+    int ROWS, COLUMNS, SEED;
     std::vector<std::vector<char>> maze;
 
     std::vector<int> currentCoordinate = {1, 2};
     std::vector<bool> possibleMoves = {false, false, false, false};
-    std::vector<int> moves;
+    std::stack<std::vector<int>> moves;
 };
 
 Maze::Maze(Arguments argumentsObj)
@@ -93,10 +87,7 @@ Maze::Maze(Arguments argumentsObj)
 
     ROWS = coordinates.at(0);
     COLUMNS = coordinates.at(1);
-
-    if (coordinates.size() == 3) {
-        SEED = coordinates.at(2);
-    }
+    SEED = coordinates.at(2);
 
     Maze::initializeMaze();
     Maze::generateMaze(currentCoordinate, possibleMoves, moves);
@@ -108,10 +99,10 @@ void Maze::initializeMaze()
 
     for (int i = 0; i < maze.size(); i++) {
         for (int j = 0; j < (COLUMNS * 4) + 1; j++) {
-            if (j % 4 == 0 && i % 2 == 0) {
+            if (i % 2 == 0 && j % 4 == 0) {
                 maze.at(i).push_back('+');
             }
-            else if (j % 4 == 0 && i % 2 == 1) {
+            else if (i % 2 == 1 && j % 4 == 0) {
                 maze.at(i).push_back('|');
             }
             else if (i % 2 == 0) {
@@ -124,7 +115,7 @@ void Maze::initializeMaze()
     }
 }
 
-void Maze::generateMaze(std::vector<int> currentCoordinate, std::vector<bool> possibleMoves, std::vector<int> moves)
+void Maze::generateMaze(std::vector<int> currentCoordinate, std::vector<bool> possibleMoves, std::stack<std::vector<int>> moves)
 {
     int currentRow = currentCoordinate.at(0);
     int currentColumn = currentCoordinate.at(1);
@@ -132,6 +123,7 @@ void Maze::generateMaze(std::vector<int> currentCoordinate, std::vector<bool> po
     maze.at(currentRow).at(currentColumn) = '.';
 
     int visited = 0;
+
     for (int i = 1; i < maze.size() - 1; i++) {
         for (int j = 2; j < (COLUMNS * 4) - 1; j++) {
             if (maze.at(i).at(j) == '.') {
@@ -152,32 +144,30 @@ void Maze::generateMaze(std::vector<int> currentCoordinate, std::vector<bool> po
         return;
     }
 
-    moves.push_back(currentRow);
-    moves.push_back(currentColumn);
+    std::vector<int> temp = {currentRow, currentColumn};
+    moves.push(temp);
 
-    if (currentColumn != 2 && maze.at(currentRow).at(currentColumn - 4) != '.') {
-        possibleMoves.at(0) = true;
-    }
-    if (currentRow != 1 && maze.at(currentRow - 2).at(currentColumn) != '.') {
-        possibleMoves.at(1) = true;
-    }
     if (currentColumn != (maze.at(0).size() - 3) && maze.at(currentRow).at(currentColumn + 4) != '.') {
         possibleMoves.at(2) = true;
     }
     if (currentRow != (maze.size() - 2) && maze.at(currentRow + 2).at(currentColumn) != '.') {
         possibleMoves.at(3) = true;
     }
+    if (currentColumn != 2 && maze.at(currentRow).at(currentColumn - 4) != '.') {
+        possibleMoves.at(0) = true;
+    }
+    if (currentRow != 1 && maze.at(currentRow - 2).at(currentColumn) != '.') {
+        possibleMoves.at(1) = true;
+    }
 
-    if ((possibleMoves.at(0) == false && possibleMoves.at(1) == false && possibleMoves.at(2) == false && possibleMoves.at(3) == false) || (currentRow == maze.size() - 2 && currentColumn == maze.at(0).size() - 3)) {
-        currentCoordinate.at(0) = moves.at(moves.size() - 4);
-        currentCoordinate.at(1) = moves.at(moves.size() - 3);
+    if ((possibleMoves.at(0) == false && possibleMoves.at(1) == false && possibleMoves.at(2) == false && possibleMoves.at(3) == false)) {
+        moves.pop();
+
+        currentCoordinate = moves.top();
         currentRow = currentCoordinate.at(0);
         currentColumn = currentCoordinate.at(1);
 
-        moves.pop_back();
-        moves.pop_back();
-        moves.pop_back();
-        moves.pop_back();
+        moves.pop();
     }
 
     int pathToChoose = Maze::randomPath(possibleMoves, SEED);
@@ -233,43 +223,42 @@ int Maze::randomPath(std::vector<bool> possibleMoves, int SEED)
         }
     }
 
-    struct timeval time_now {};
-    gettimeofday(&time_now, nullptr);
-    time_t msecs_time = time_now.tv_usec;
+    timeval timeNow;
+    gettimeofday(&timeNow, NULL);
+    time_t timeMs = timeNow.tv_usec;
 
     if (SEED == -1) {
-        srand(msecs_time);
         if (paths == 0) {
             return 1;
         }
+
+        srand(timeMs);
         return (rand() % paths);
     }
     else {
+        if (paths == 0) {
+            return 1;
+        }
+
         srand(SEED);
         return (rand() % paths);
     }
 }
 
-std::vector<std::vector<char>> Maze::getMaze()
-{
-    return maze;
-}
-
-int Maze::getColumns()
-{
-    return COLUMNS;
-}
-
 class MazeSolver {
   public:
     MazeSolver(Maze mazeObj);
+
     void solveMaze(std::vector<std::vector<char>> &maze, std::vector<int> currentCoordinate, int COLUMNS, std::stack<std::vector<int>> tempCoordinate, std::stack<std::vector<int>> coordinateStack);
+
     bool checkTwoPaths(std::vector<std::vector<char>> maze, std::vector<int> currentCoordinate, int COLUMNS);
+
     void printMaze();
 
   private:
-    std::vector<std::vector<char>> maze;
     int COLUMNS;
+    std::vector<std::vector<char>> maze;
+
     std::vector<int> currentCoordinate = {1, 2};
     std::stack<std::vector<int>> tempCoordinate;
     std::stack<std::vector<int>> coordinateStack;
@@ -277,8 +266,8 @@ class MazeSolver {
 
 MazeSolver::MazeSolver(Maze mazeObj)
 {
-    maze = mazeObj.getMaze();
     COLUMNS = mazeObj.getColumns();
+    maze = mazeObj.getMaze();
 
     MazeSolver::solveMaze(maze, currentCoordinate, COLUMNS, tempCoordinate, coordinateStack);
 }
@@ -313,17 +302,17 @@ void MazeSolver::solveMaze(std::vector<std::vector<char>> &maze, std::vector<int
             tempCoordinate.push(backtrack);
         }
 
-        if (maze.at(currentRow).at(currentColumn - 2) == ' ' && maze.at(currentRow).at(currentColumn - 4) != '.' && maze.at(currentRow).at(currentColumn - 4) != 'v') {
-            currentCoordinate.at(1) -= 4;
-        }
-        else if (maze.at(currentRow - 1).at(currentColumn) == ' ' && maze.at(currentRow - 2).at(currentColumn) != '.' && maze.at(currentRow - 2).at(currentColumn) != 'v') {
-            currentCoordinate.at(0) -= 2;
-        }
-        else if (maze.at(currentRow).at(currentColumn + 2) == ' ' && maze.at(currentRow).at(currentColumn + 4) != '.' && maze.at(currentRow).at(currentColumn + 4) != 'v') {
+        if (maze.at(currentRow).at(currentColumn + 2) == ' ' && maze.at(currentRow).at(currentColumn + 4) != '.' && maze.at(currentRow).at(currentColumn + 4) != 'v') {
             currentCoordinate.at(1) += 4;
         }
         else if (maze.at(currentRow + 1).at(currentColumn) == ' ' && maze.at(currentRow + 2).at(currentColumn) != '.' && maze.at(currentRow + 2).at(currentColumn) != 'v') {
             currentCoordinate.at(0) += 2;
+        }
+        else if (maze.at(currentRow).at(currentColumn - 2) == ' ' && maze.at(currentRow).at(currentColumn - 4) != '.' && maze.at(currentRow).at(currentColumn - 4) != 'v') {
+            currentCoordinate.at(1) -= 4;
+        }
+        else if (maze.at(currentRow - 1).at(currentColumn) == ' ' && maze.at(currentRow - 2).at(currentColumn) != '.' && maze.at(currentRow - 2).at(currentColumn) != 'v') {
+            currentCoordinate.at(0) -= 2;
         }
         else {
             while (coordinateStack.top() != tempCoordinate.top()) {
