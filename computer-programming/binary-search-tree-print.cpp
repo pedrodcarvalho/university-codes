@@ -126,11 +126,13 @@ int BST::getHeight()
 
 void BST::prettyPrint()
 {
-    std::vector<std::vector<int>> matrix(getHeight(), std::vector<int>(treeInOrder.size()));
+    std::vector<std::vector<int>> matrix(getHeight(), std::vector<int>(treeInOrder.size(), -1));
 
     for (int i = 0; i < getHeight(); i++) {
         for (int j = 0; j < treeUnsorted.size(); j++) {
-            matrix.at(i).at(j) = treeInOrder.at(j);
+            if (treeInOrder.at(j) == treeInOrder.at(i)) {
+                matrix.at(i).at(j) = treeInOrder.at(j);
+            }
         }
     }
 
@@ -139,13 +141,17 @@ void BST::prettyPrint()
         std::cout << std::setfill(' ');
 
         for (int j = 0; j < matrix.at(0).size(); j++) {
-            std::cout << '|' << std::setw(4) << matrix.at(i).at(j);
+            std::cout << '|' << std::setw(4);
+
+            matrix.at(i).at(j) == -1 ? std::cout << " " : std::cout << matrix.at(i).at(j);
         }
 
         std::cout << '|' << '\n';
     }
 
-    std::cout << std::setfill('-') << std::setw((treeInOrder.size() * 5) + 1) << "" << '\n';
+    if (matrix.size() > 0) {
+        std::cout << std::setfill('-') << std::setw((treeInOrder.size() * 5) + 1) << "" << '\n';
+    }
 }
 
 int main()
@@ -154,7 +160,7 @@ int main()
     int key;
     std::vector<int> treeInOrder;
 
-    std::cout << "Enter the numbers to be stored (end with a letter): ";
+    std::cout << "Enter the numbers to be stored: ";
 
     while (!std::cin.fail()) {
         std::cin >> key;
